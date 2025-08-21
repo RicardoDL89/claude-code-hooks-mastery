@@ -36,7 +36,7 @@ def main():
     # Get API key from environment
     api_key = os.getenv('ELEVENLABS_API_KEY')
     if not api_key:
-        print("❌ Error: ELEVENLABS_API_KEY not found in environment variables")
+        print("Error: ELEVENLABS_API_KEY not found in environment variables")
         print("Please add your ElevenLabs API key to .env file:")
         print("ELEVENLABS_API_KEY=your_api_key_here")
         sys.exit(1)
@@ -48,7 +48,7 @@ def main():
         # Initialize client
         elevenlabs = ElevenLabs(api_key=api_key)
         
-        print("🎙️  ElevenLabs Turbo v2.5 TTS")
+        print("ElevenLabs Turbo v2.5 TTS")
         print("=" * 40)
         
         # Get text from command line argument or use default
@@ -57,32 +57,39 @@ def main():
         else:
             text = "The first move is what sets everything in motion."
         
-        print(f"🎯 Text: {text}")
-        print("🔊 Generating and playing...")
+        print(f"Text: {text}")
+        print("Generating and playing...")
         
         try:
             # Generate and play audio directly
+            # Try to get available voices and use the first one, or use a known default
+            try:
+                voices = elevenlabs.voices.get_all()
+                voice_id = voices.voices[0].voice_id if voices.voices else "21m00Tcm4TlvDq8ikWAM"  # Rachel voice (default)
+            except:
+                voice_id = "21m00Tcm4TlvDq8ikWAM"  # Rachel voice as fallback
+            
             audio = elevenlabs.text_to_speech.convert(
                 text=text,
-                voice_id="WejK3H1m7MI9CHnIjW9K",  # Specified voice
+                voice_id=voice_id,
                 model_id="eleven_turbo_v2_5",
                 output_format="mp3_44100_128",
             )
             
             play(audio)
-            print("✅ Playback complete!")
+            print("Playback complete!")
             
         except Exception as e:
-            print(f"❌ Error: {e}")
+            print(f"Error: {e}")
         
         
     except ImportError:
-        print("❌ Error: elevenlabs package not installed")
+        print("Error: elevenlabs package not installed")
         print("This script uses UV to auto-install dependencies.")
         print("Make sure UV is installed: https://docs.astral.sh/uv/")
         sys.exit(1)
     except Exception as e:
-        print(f"❌ Unexpected error: {e}")
+        print(f"Unexpected error: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":

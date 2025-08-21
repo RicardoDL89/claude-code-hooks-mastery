@@ -42,19 +42,25 @@ def get_tts_script_path():
     script_dir = Path(__file__).parent
     tts_dir = script_dir / "utils" / "tts"
     
-    # Check for ElevenLabs API key (highest priority)
+    # Temporarily prioritize Windows TTS to avoid ffmpeg requirement
+    if sys.platform == "win32":
+        windows_script = tts_dir / "windows_tts.py"
+        if windows_script.exists():
+            return str(windows_script)
+    
+    # Check for ElevenLabs API key (second priority - requires ffmpeg)
     if os.getenv('ELEVENLABS_API_KEY'):
         elevenlabs_script = tts_dir / "elevenlabs_tts.py"
         if elevenlabs_script.exists():
             return str(elevenlabs_script)
     
-    # Check for OpenAI API key (second priority)
+    # Check for OpenAI API key (third priority)
     if os.getenv('OPENAI_API_KEY'):
         openai_script = tts_dir / "openai_tts.py"
         if openai_script.exists():
             return str(openai_script)
     
-    # Fall back to pyttsx3 (no API key required)
+    # Final fallback to pyttsx3 (no API key required)
     pyttsx3_script = tts_dir / "pyttsx3_tts.py"
     if pyttsx3_script.exists():
         return str(pyttsx3_script)
@@ -70,81 +76,48 @@ def get_llm_completion_message():
     Returns:
         str: Generated or fallback completion message
     """
-    # Get current script directory and construct utils/llm path
-    script_dir = Path(__file__).parent
-    llm_dir = script_dir / "utils" / "llm"
-    
-    # Try OpenAI first (highest priority)
-    if os.getenv('OPENAI_API_KEY'):
-        oai_script = llm_dir / "oai.py"
-        if oai_script.exists():
-            try:
-                result = subprocess.run([
-                    "uv", "run", str(oai_script), "--completion"
-                ], 
-                capture_output=True,
-                text=True,
-                timeout=10
-                )
-                if result.returncode == 0 and result.stdout.strip():
-                    return result.stdout.strip()
-            except (subprocess.TimeoutExpired, subprocess.SubprocessError):
-                pass
-    
-    # Try Anthropic second
-    if os.getenv('ANTHROPIC_API_KEY'):
-        anth_script = llm_dir / "anth.py"
-        if anth_script.exists():
-            try:
-                result = subprocess.run([
-                    "uv", "run", str(anth_script), "--completion"
-                ], 
-                capture_output=True,
-                text=True,
-                timeout=10
-                )
-                if result.returncode == 0 and result.stdout.strip():
-                    return result.stdout.strip()
-            except (subprocess.TimeoutExpired, subprocess.SubprocessError):
-                pass
-    
-    # Try Ollama third (local LLM)
-    ollama_script = llm_dir / "ollama.py"
-    if ollama_script.exists():
-        try:
-            result = subprocess.run([
-                "uv", "run", str(ollama_script), "--completion"
-            ], 
-            capture_output=True,
-            text=True,
-            timeout=10
-            )
-            if result.returncode == 0 and result.stdout.strip():
-                return result.stdout.strip()
-        except (subprocess.TimeoutExpired, subprocess.SubprocessError):
-            pass
-    
-    # Fallback to random predefined message
+    # Temporarily skip LLM generation to ensure TTS works
+    # Use fallback messages directly for reliability
     messages = get_completion_messages()
     return random.choice(messages)
 
 def announce_completion():
     """Announce completion using the best available TTS service."""
     try:
+        # Debug: Always log what's happening
+        with open("logs/tts_debug.txt", "a") as f:
+            f.write(f"announce_completion() called\n")
+        
         tts_script = get_tts_script_path()
+        
+        with open("logs/tts_debug.txt", "a") as f:
+            f.write(f"TTS Script found: {tts_script}\n")
+        
         if not tts_script:
+            with open("logs/tts_debug.txt", "a") as f:
+                f.write("No TTS scripts available\n")
             return  # No TTS scripts available
         
         # Get completion message (LLM-generated or fallback)
         completion_message = get_llm_completion_message()
         
         # Call the TTS script with the completion message
-        subprocess.run([
+        result = subprocess.run([
             "uv", "run", tts_script, completion_message
         ], 
         capture_output=True,  # Suppress output
-        timeout=10  # 10-second timeout
+        timeout=10,  # 10-second timeout
+        text=True
         )
+        
+        # Debug: log TTS result (temporary)
+        with open("logs/tts_debug.txt", "a") as f:
+            f.write(f"TTS Script: {tts_script}\n")
+            f.write(f"Message: {completion_message}\n")
+            f.write(f"Return code: {result.returncode}\n")
+            f.write(f"Stdout: {result.stdout}\n")
+            f.write(f"Stderr: {result.stderr}\n")
+            f.write("---\n")
         
     except (subprocess.TimeoutExpired, subprocess.SubprocessError, FileNotFoundError):
         # Fail silently if TTS encounters issues
@@ -160,6 +133,11 @@ def main():
         parser = argparse.ArgumentParser()
         parser.add_argument('--chat', action='store_true', help='Copy transcript to chat.json')
         parser.add_argument('--notify', action='store_true', help='Enable TTS completion announcement')
+        
+        # Debug: Log sys.argv
+        with open("logs/tts_debug.txt", "a") as f:
+            f.write(f"sys.argv: {sys.argv}\n")
+        
         args = parser.parse_args()
         
         # Read JSON input from stdin
@@ -214,9 +192,13 @@ def main():
                 except Exception:
                     pass  # Fail silently
 
-        # Announce completion via TTS (only if --notify flag is set)
-        if args.notify:
-            announce_completion()
+        # Debug: Log flag status
+        with open("logs/tts_debug.txt", "a") as f:
+            f.write(f"--notify flag: {args.notify}\n")
+            f.write(f"About to call announce_completion: {args.notify}\n")
+        
+        # Always announce completion via TTS (temporarily force enabled for debugging)
+        announce_completion()
 
         sys.exit(0)
 
