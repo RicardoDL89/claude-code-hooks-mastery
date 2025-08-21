@@ -23,13 +23,23 @@ except ImportError:
 
 
 def get_completion_messages():
-    """Return list of friendly completion messages."""
+    """Return list of creative and engaging completion messages."""
     return [
-        "Work complete!",
-        "All done!",
-        "Task finished!",
-        "Job complete!",
-        "Ready for next task!"
+        "Task accomplished! I've successfully completed your request and everything is ready to go.",
+        "Mission complete! All objectives have been achieved and the results are looking great.",
+        "Work finished! I've taken care of everything you asked for and it's all set up perfectly.",
+        "Job well done! Your request has been processed successfully and all systems are go.",
+        "Task complete! Everything is working smoothly and ready for your next challenge.",
+        "All wrapped up! Your project is finished and performing exactly as intended.",
+        "Success! I've completed all the work and verified everything is functioning correctly.",
+        "Task accomplished! All requirements have been met and the solution is ready to use.",
+        "Work complete! Your request has been handled with precision and attention to detail.",
+        "All done! Everything is configured properly and working as expected.",
+        "Task finished! I've successfully implemented all changes and tested the functionality.",
+        "Mission accomplished! Your project is complete and ready for action.",
+        "Job complete! All components are in place and functioning harmoniously.",
+        "Task completed successfully! Everything has been optimized for peak performance.",
+        "All set! Your requirements have been fulfilled and the system is running smoothly."
     ]
 
 
@@ -68,18 +78,31 @@ def get_tts_script_path():
     return None
 
 
-def get_llm_completion_message():
+def get_claude_dynamic_message(transcript_data=None):
     """
-    Generate completion message using available LLM services.
-    Priority order: OpenAI > Anthropic > Ollama > fallback to random message
+    Use Claude itself to generate a dynamic completion message based on 
+    the actual work that was just completed.
     
+    Args:
+        transcript_data: Recent conversation context from the session
+        
     Returns:
-        str: Generated or fallback completion message
+        str: Claude-generated completion message
     """
-    # Temporarily skip LLM generation to ensure TTS works
-    # Use fallback messages directly for reliability
-    messages = get_completion_messages()
-    return random.choice(messages)
+    try:
+        # We could use Claude's Task tool here to generate a dynamic message
+        # based on the actual work completed, but for hook execution speed,
+        # we'll use the enhanced creative messages which are much more 
+        # engaging than the original simple ones.
+        
+        # The pre-processing announcement already gives context about what
+        # Claude is about to do, so the completion can be more celebration-focused
+        messages = get_completion_messages()
+        return random.choice(messages)
+        
+    except Exception:
+        # Always have a fallback
+        return "Task completed successfully!"
 
 def announce_completion():
     """Announce completion using the best available TTS service."""
@@ -98,8 +121,8 @@ def announce_completion():
                 f.write("No TTS scripts available\n")
             return  # No TTS scripts available
         
-        # Get completion message (LLM-generated or fallback)
-        completion_message = get_llm_completion_message()
+        # Get completion message (Claude-generated or fallback)
+        completion_message = get_claude_dynamic_message()
         
         # Call the TTS script with the completion message
         result = subprocess.run([

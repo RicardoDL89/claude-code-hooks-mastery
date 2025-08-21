@@ -18,7 +18,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "uv run .claude/status_lines/status_line.py",
+    "command": "input=$(cat); current_dir=$(echo \"$input\" | jq -r '.workspace.current_dir'); printf \"📁 %s | 🕒 %s\" \"$(basename \"$current_dir\")\" \"$(date '+%Y-%m-%d %H:%M:%S')\"",
     "padding": 0
   },
   "hooks": {
@@ -82,7 +82,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run .claude/hooks/user_prompt_submit.py --log-only --store-last-prompt --name-agent"
+            "command": "uv run .claude/hooks/user_prompt_submit.py --log-only --store-last-prompt --name-agent --announce"
           }
         ]
       }

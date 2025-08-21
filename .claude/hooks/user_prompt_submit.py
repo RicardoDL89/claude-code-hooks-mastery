@@ -20,6 +20,63 @@ except ImportError:
     pass  # dotenv is optional
 
 
+def announce_task_start(prompt):
+    """Announce what Claude is about to work on via TTS."""
+    try:
+        import subprocess
+        
+        # Generate intelligent announcement based on prompt content
+        announcement = generate_task_announcement(prompt)
+        
+        # Get TTS script path (same logic as stop hook)
+        script_dir = Path(__file__).parent
+        tts_dir = script_dir / "utils" / "tts"
+        
+        # Prioritize Windows TTS for reliability
+        if os.name == 'nt':  # Windows
+            windows_script = tts_dir / "windows_tts.py"
+            if windows_script.exists():
+                subprocess.run([
+                    "uv", "run", str(windows_script), announcement
+                ], 
+                capture_output=True,
+                timeout=15
+                )
+    except Exception:
+        # Fail silently to not disrupt the main flow
+        pass
+
+
+def generate_task_announcement(prompt):
+    """Generate an intelligent announcement based on the user's prompt."""
+    prompt_lower = prompt.lower()
+    
+    # Detect common task types and create contextual announcements
+    if any(word in prompt_lower for word in ['create', 'build', 'make', 'generate']):
+        return f"I'm about to create something new based on your request. Let me analyze the requirements and get started on building this for you."
+    
+    elif any(word in prompt_lower for word in ['fix', 'debug', 'error', 'issue', 'problem']):
+        return f"I'm about to investigate and resolve the issue you've described. Let me analyze the problem and work on a solution."
+    
+    elif any(word in prompt_lower for word in ['analyze', 'review', 'check', 'examine']):
+        return f"I'm about to perform a detailed analysis of your request. Let me examine everything carefully and provide you with insights."
+    
+    elif any(word in prompt_lower for word in ['update', 'modify', 'change', 'edit']):
+        return f"I'm about to make the modifications you've requested. Let me carefully update everything according to your specifications."
+    
+    elif any(word in prompt_lower for word in ['delete', 'remove', 'clean']):
+        return f"I'm about to safely remove or clean up the items you've specified. Let me handle this carefully for you."
+    
+    elif any(word in prompt_lower for word in ['explain', 'help', 'how', 'what', 'why']):
+        return f"I'm about to provide you with a detailed explanation. Let me gather the information and break this down clearly for you."
+    
+    elif any(word in prompt_lower for word in ['test', 'run', 'execute']):
+        return f"I'm about to run tests and execute the operations you've requested. Let me proceed with the testing process."
+    
+    else:
+        return f"I'm about to work on your request. Let me analyze what needs to be done and get this handled for you."
+
+
 def log_user_prompt(session_id, input_data):
     """Log user prompt to logs directory."""
     # Ensure logs directory exists
@@ -149,6 +206,8 @@ def main():
                           help='Store the last prompt for status line display')
         parser.add_argument('--name-agent', action='store_true',
                           help='Generate an agent name for the session')
+        parser.add_argument('--announce', action='store_true',
+                          help='Announce what Claude is about to work on via TTS')
         args = parser.parse_args()
         
         # Read JSON input from stdin
@@ -172,6 +231,10 @@ def main():
                 # Exit code 2 blocks the prompt with error message
                 print(f"Prompt blocked: {reason}", file=sys.stderr)
                 sys.exit(2)
+        
+        # Announce what Claude is about to work on (if enabled)
+        if args.announce:
+            announce_task_start(prompt)
         
         # Add context information (optional)
         # You can print additional context that will be added to the prompt

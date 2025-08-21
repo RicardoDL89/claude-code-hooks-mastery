@@ -36,14 +36,17 @@ def main():
     print("Speaking...")
     
     try:
-        # Use PowerShell System.Speech for TTS
-        powershell_cmd = f"""Add-Type -AssemblyName System.Speech; $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer; $synth.Speak('{text}')"""
+        # Escape text for PowerShell (replace single quotes with double single quotes)
+        escaped_text = text.replace("'", "''")
+        
+        # Use PowerShell System.Speech for TTS with proper escaping
+        powershell_cmd = f"""Add-Type -AssemblyName System.Speech; $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer; $synth.Speak('{escaped_text}')"""
         
         subprocess.run([
             "powershell", 
             "-Command", 
             powershell_cmd
-        ], check=True, capture_output=True)
+        ], check=True, capture_output=True, text=True)
         
         print("Playback complete!")
         

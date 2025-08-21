@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.anthropic.com)",
+      "mcp__ClickUp__get_workspace_hierarchy",
+      "mcp__ClickUp__get_workspace_members",
+      "Bash(npx:*)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "ElevenLabs",
+    "n8n-local",
+    "ClickUp",
+    "tavily-mcp",
+    "playwright"
+  ]
+}
