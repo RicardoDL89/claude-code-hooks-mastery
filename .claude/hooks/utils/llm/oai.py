@@ -34,7 +34,7 @@ def prompt_llm(prompt_text):
         client = OpenAI(api_key=api_key)
 
         response = client.chat.completions.create(
-            model="gpt-4.1-nano",  # Fastest OpenAI model
+            model="gpt-4o-mini",  # Fast and cost-effective OpenAI model
             messages=[{"role": "user", "content": prompt_text}],
             max_tokens=100,
             temperature=0.7,

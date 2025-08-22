@@ -1,0 +1,52 @@
+{
+  "mcpServers": {
+    "ElevenLabs": {
+      "command": "uvx",
+      "args": [
+        "elevenlabs-mcp"
+      ],
+      "env": {
+        "ELEVENLABS_API_KEY": "sk_219fde99fe592f0e7da8f25f2986383091363f73f4d92e27"
+      }
+    },
+    "n8n-local": {
+      "command": "n8n-mcp-server.cmd",
+      "env": {
+        "N8N_API_URL": "http://localhost:5678/api/v1",
+        "N8N_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NDEyZDk3MC02ZWQ4LTQ2MjUtYjdmMC0yNmU5NDJhYjdjMzYiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzU1NzYyNTc2fQ.ZXeG1xhsTY2cwI-3cERLFffzGQtgkiOHsoJ9Il5q25g",
+        "N8N_WEBHOOK_USERNAME": "ricardodl@hpd.co.za",
+        "N8N_WEBHOOK_PASSWORD": "Madpora#89"
+      },
+      "disabled": false
+    },
+    "ClickUp": {
+      "command": "npx.cmd",
+      "args": [
+        "-y",
+        "clickup-mcp"
+      ],
+      "env": {
+        "CLICKUP_API_KEY": "pk_62552175_MIPCE1DRCYVOMVL0XB1RDMN20Z602Z0Y",
+        "CLICKUP_TEAM_ID": "90150785360",
+        "DOCUMENT_SUPPORT": "true"
+      }
+    },
+    "tavily-mcp": {
+      "command": "npx.cmd",
+      "args": [
+        "-y",
+        "tavily-mcp@0.1.2"
+      ],
+      "env": {
+        "TAVILY_API_KEY": "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"
+      }
+    },
+    "playwright": {
+      "command": "npx.cmd",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest"
+      ]
+    }
+  }
+}

@@ -4,7 +4,22 @@
       "WebFetch(domain:docs.anthropic.com)",
       "mcp__ClickUp__get_workspace_hierarchy",
       "mcp__ClickUp__get_workspace_members",
-      "Bash(npx:*)"
+      "Bash(npx:*)",
+      "mcp__tavily-mcp__tavily-search",
+      "mcp__ElevenLabs__search_voices",
+      "mcp__ElevenLabs__text_to_speech",
+      "mcp__ElevenLabs__play_audio",
+      "Bash(python:*)",
+      "Bash(ffplay:*)",
+      "Bash(where ffplay)",
+      "Bash(set PATH=%PATH%)",
+      "Bash(C:ProgramDatachocolateylibffmpegtoolsffmpegbin)",
+      "Bash(curl:*)",
+      "Bash(powershell:*)",
+      "Bash(where n8n)",
+      "Bash(where node)",
+      "Bash(start \"n8n\" cmd /c \"npx n8n start\")",
+      "Bash(timeout:*)"
     ]
   },
   "enabledMcpjsonServers": [

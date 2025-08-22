@@ -61,13 +61,8 @@ def main():
         print("Generating and playing...")
         
         try:
-            # Generate and play audio directly
-            # Try to get available voices and use the first one, or use a known default
-            try:
-                voices = elevenlabs.voices.get_all()
-                voice_id = voices.voices[0].voice_id if voices.voices else "21m00Tcm4TlvDq8ikWAM"  # Rachel voice (default)
-            except:
-                voice_id = "21m00Tcm4TlvDq8ikWAM"  # Rachel voice as fallback
+            # Always use Rachel's voice - force the exact voice ID
+            voice_id = "21m00Tcm4TlvDq8ikWAM"  # Rachel voice - fixed ID
             
             audio = elevenlabs.text_to_speech.convert(
                 text=text,

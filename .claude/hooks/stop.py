@@ -46,29 +46,29 @@ def get_completion_messages():
 def get_tts_script_path():
     """
     Determine which TTS script to use based on available API keys.
-    Priority order: ElevenLabs > OpenAI > pyttsx3
+    Priority order: ElevenLabs > OpenAI > Windows TTS > pyttsx3
     """
     # Get current script directory and construct utils/tts path
     script_dir = Path(__file__).parent
     tts_dir = script_dir / "utils" / "tts"
     
-    # Temporarily prioritize Windows TTS to avoid ffmpeg requirement
-    if sys.platform == "win32":
-        windows_script = tts_dir / "windows_tts.py"
-        if windows_script.exists():
-            return str(windows_script)
-    
-    # Check for ElevenLabs API key (second priority - requires ffmpeg)
+    # Check for ElevenLabs API key (first priority - Rachel's voice!)
     if os.getenv('ELEVENLABS_API_KEY'):
         elevenlabs_script = tts_dir / "elevenlabs_tts.py"
         if elevenlabs_script.exists():
             return str(elevenlabs_script)
     
-    # Check for OpenAI API key (third priority)
+    # Check for OpenAI API key (second priority)
     if os.getenv('OPENAI_API_KEY'):
         openai_script = tts_dir / "openai_tts.py"
         if openai_script.exists():
             return str(openai_script)
+    
+    # Windows TTS fallback (third priority)
+    if sys.platform == "win32":
+        windows_script = tts_dir / "windows_tts.py"
+        if windows_script.exists():
+            return str(windows_script)
     
     # Final fallback to pyttsx3 (no API key required)
     pyttsx3_script = tts_dir / "pyttsx3_tts.py"
@@ -80,23 +80,65 @@ def get_tts_script_path():
 
 def get_claude_dynamic_message(transcript_data=None):
     """
-    Use Claude itself to generate a dynamic completion message based on 
+    Use LLM services to generate a dynamic completion message based on 
     the actual work that was just completed.
     
     Args:
         transcript_data: Recent conversation context from the session
         
     Returns:
-        str: Claude-generated completion message
+        str: LLM-generated completion message
     """
     try:
-        # We could use Claude's Task tool here to generate a dynamic message
-        # based on the actual work completed, but for hook execution speed,
-        # we'll use the enhanced creative messages which are much more 
-        # engaging than the original simple ones.
+        # Get current script directory and construct utils/llm path
+        script_dir = Path(__file__).parent
+        llm_dir = script_dir / "utils" / "llm"
         
-        # The pre-processing announcement already gives context about what
-        # Claude is about to do, so the completion can be more celebration-focused
+        # Try LLM services in priority order: Claude Code > OpenAI > Anthropic > Ollama
+        llm_scripts = [
+            ("claude_code.py", None),  # Always available - uses Claude Code itself
+            ("oai.py", "OPENAI_API_KEY"),
+            ("anth.py", "ANTHROPIC_API_KEY"), 
+            ("ollama.py", "OLLAMA_HOST")
+        ]
+        
+        for script_name, env_var in llm_scripts:
+            # Check if the service is available
+            if env_var is None:
+                # For Claude Code, just check if script exists (always available)
+                if not (llm_dir / script_name).exists():
+                    continue
+            elif env_var == "OLLAMA_HOST":
+                # For Ollama, just check if script exists (doesn't need API key)
+                if not (llm_dir / script_name).exists():
+                    continue
+            else:
+                # For API services, check both script and env var
+                if not os.getenv(env_var) or not (llm_dir / script_name).exists():
+                    continue
+            
+            try:
+                # Call the LLM script to generate completion message
+                script_path = llm_dir / script_name
+                result = subprocess.run([
+                    "uv", "run", str(script_path), "--completion"
+                ], 
+                capture_output=True,
+                timeout=8,  # 8-second timeout for LLM call
+                text=True
+                )
+                
+                if result.returncode == 0 and result.stdout.strip():
+                    message = result.stdout.strip()
+                    # Validate the message is reasonable
+                    if message and len(message) < 200 and "Error" not in message:
+                        return message
+                        
+            except (subprocess.TimeoutExpired, subprocess.SubprocessError):
+                # Try next service
+                continue
+        
+        # If all LLM services fail, fall back to enhanced static messages
         messages = get_completion_messages()
         return random.choice(messages)
         
